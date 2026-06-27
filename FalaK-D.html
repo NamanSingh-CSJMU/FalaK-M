@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FalaK - The Masterpiece</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #020203; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #gameWrapper { position: relative; }
+        canvas { background-color: #060608; box-shadow: 0 0 80px rgba(0, 229, 255, 0.1); border-radius: 8px; border: 1px solid #1a1a24; transition: box-shadow 0.3s; }
+        
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+        .warp-glow { box-shadow: 0 0 100px rgba(157, 0, 255, 0.6) !important; }
+        @keyframes shake { 10%,90%{transform:translate3d(-3px,0,0)} 20%,80%{transform:translate3d(5px,0,0)} 30%,50%,70%{transform:translate3d(-10px,0,0)} 40%,60%{transform:translate3d(10px,0,0)} }
+        
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(2, 2, 3, 0.9); display: flex; flex-direction: column; justify-content: center; align-items: center; backdrop-filter: blur(8px); border-radius: 8px; z-index: 20; }
+        .hidden { display: none !important; }
+        
+        h1.title { font-family: 'Orbitron', sans-serif; font-size: 5.5rem; letter-spacing: 8px; font-weight: 900; color: #F6B93B; text-shadow: 0px 5px 30px rgba(246, 185, 59, 0.6); margin-bottom: 5px; }
+        .quote { color: #00E5FF; letter-spacing: 4px; font-size: 0.85rem; margin-bottom: 25px; font-family: 'Orbitron'; opacity: 0.8; text-shadow: 0 0 10px rgba(0,229,255,0.4); }
+
+        input[type="text"] { background: rgba(255,255,255,0.05); border: 1px solid #444; color: #F6B93B; font-family: 'Orbitron'; padding: 12px; font-size: 1.2rem; border-radius: 5px; text-align: center; outline: none; margin-bottom: 15px; width: 300px; text-transform: uppercase; }
+        
+        .btn { background: transparent; border: 2px solid #F6B93B; color: #F6B93B; padding: 12px 35px; font-size: 1.2rem; font-family: 'Orbitron'; cursor: pointer; border-radius: 5px; transition: 0.3s; font-weight: bold; margin: 5px; }
+        .btn:hover { background: #F6B93B; color: #000; box-shadow: 0 0 25px #F6B93B; transform: scale(1.05); }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 350px; margin-bottom: 20px; }
+        .stat-box { background: rgba(255,255,255,0.02); border: 1px solid #222; padding: 12px; border-radius: 5px; text-align: center; }
+        .stat-label { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-value { font-family: 'Orbitron'; font-size: 1.8rem; color: #00E5FF; font-weight: bold; margin-top: 5px; }
+        
+        .diff-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .diff-btn { background: #111; border: 1px solid #444; color: #888; padding: 8px 15px; font-family: 'Orbitron'; cursor: pointer; border-radius: 4px; transition: 0.3s; font-size: 0.85rem;}
+        .diff-btn.active { background: #00E5FF; color: #000; border-color: #00E5FF; box-shadow: 0 0 15px rgba(0, 229, 255, 0.5); font-weight: bold; }
+        .diff-btn:hover { background: #222; color: #fff; }
+
+        #hud { position: absolute; top: 20px; left: 0; width: 100%; display: flex; justify-content: space-between; padding: 0 30px; pointer-events: none; z-index: 10; }
+        .hud-score { font-family: 'Orbitron'; font-size: 3.5rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        #comboText { font-family: 'Orbitron'; font-size: 1.3rem; color: #F6B93B; font-weight: bold; text-shadow: 0 0 10px #F6B93B; }
+        
+        #focusContainer { width: 180px; height: 8px; background: #222; border-radius: 4px; margin-top: 5px; border: 1px solid #444; overflow: hidden; }
+        #focusBar { width: 100%; height: 100%; background: #00E5FF; box-shadow: 0 0 10px #00E5FF; transition: width 0.1s; }
+        #statusIndicator { font-family: 'Orbitron'; font-size: 1.1rem; margin-bottom: 5px; display: none; font-weight: bold; }
+        
+        #alertText { font-family: 'Orbitron'; font-size: 2.2rem; color: #ff3366; font-weight: bold; text-shadow: 0 0 20px #ff3366; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.3s; z-index: 15; pointer-events: none;}
+        
+        .instructions { font-size: 0.85rem; color: #aaa; margin-top: 20px; text-align: center; line-height: 1.7; }
+        .key { background: #222; padding: 3px 8px; border-radius: 3px; color: #fff; border: 1px solid #555; }
+    </style>
+</head>
+<body>
+    <div id="gameWrapper">
+        <div id="alertText">DARK SECTOR ENTERED</div>
+        
+        <div id="hud" class="hidden">
+            <div>
+                <div class="hud-score" id="inGameScore">0</div>
+                <div id="comboText"></div>
+            </div>
+            <div style="text-align: right;">
+                <div id="statusIndicator">STATUS</div>
+                <div style="font-family: 'Orbitron'; font-size: 0.75rem; color: #00E5FF; margin-top:5px; letter-spacing: 1px;">MATRIX FOCUS [HOLD F]</div>
+                <div id="focusContainer"><div id="focusBar"></div></div>
+            </div>
+        </div>
+
+        <div id="mainMenu" class="overlay">
+            <h1 class="title">FalaK</h1>
+            <div class="quote">"EMBRACE THE VOID. ASCEND BEYOND."</div>
+            
+            <input type="text" id="playerName" placeholder="ENTER CALLSIGN" maxlength="12">
+            
+            <div class="dashboard-grid">
+                <div class="stat-box"><div class="stat-label">Best Score</div><div class="stat-value" id="dashHighScore">0</div></div>
+                <div class="stat-box"><div class="stat-label">Total Runs</div><div class="stat-value" id="dashGames">0</div></div>
+            </div>
+
+            <div class="diff-selector" id="difficultySelector">
+                <button class="diff-btn" data-diff="easy">EASY</button>
+                <button class="diff-btn active" data-diff="medium">MEDIUM</button>
+                <button class="diff-btn" data-diff="difficult">DIFFICULT</button>
+                <button class="diff-btn" data-diff="hard">HARD</button>
+            </div>
+
+            <button class="btn" id="startBtn">INITIALIZE</button>
+            
+            <div class="instructions">
+                <span class="key">SPACE</span> Pulse/Fly &nbsp;|&nbsp; <span class="key">SHIFT</span> Change Color &nbsp;|&nbsp; <span class="key">HOLD F</span> Slow Time<br>
+                <span style="color:#F6B93B; font-weight:bold;">🟡 +5 Pts</span> &nbsp;|&nbsp; <span style="font-weight:bold;">⚪ God Mode</span> &nbsp;|&nbsp; <span style="color:#9D00FF; font-weight:bold;">🟣 Hyper Warp</span>
+            </div>
+        </div>
+
+        <div id="gameOverScreen" class="overlay hidden">
+            <h2 style="font-size: 4rem; color: #ff3366; font-family: 'Orbitron'; text-shadow: 0 0 30px rgba(255,51,102,0.6);">SIGNAL LOST</h2>
+            <div class="dashboard-grid" style="width: 320px; margin-top: 25px;">
+                <div class="stat-box"><div class="stat-label">Score</div><div class="stat-value" style="color: #fff;" id="goScore">0</div></div>
+                <div class="stat-box"><div class="stat-label">Best</div><div class="stat-value" id="goHighScore">0</div></div>
+            </div>
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <button class="btn" id="retryBtn">RETRY</button>
+                <button class="btn" id="menuBtn">MENU</button>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="900" height="600"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const ui = {
+            mainMenu: document.getElementById('mainMenu'), gameOver: document.getElementById('gameOverScreen'),
+            hud: document.getElementById('hud'), inGameScore: document.getElementById('inGameScore'),
+            comboText: document.getElementById('comboText'), focusBar: document.getElementById('focusBar'), 
+            alertText: document.getElementById('alertText'), statusIndicator: document.getElementById('statusIndicator'),
+            playerNameInput: document.getElementById('playerName'), dashHighScore: document.getElementById('dashHighScore'),
+            dashGames: document.getElementById('dashGames'), startBtn: document.getElementById('startBtn'),
+            retryBtn: document.getElementById('retryBtn'), menuBtn: document.getElementById('menuBtn'),
+            goScore: document.getElementById('goScore'), goHighScore: document.getElementById('goHighScore'),
+            diffBtns: document.querySelectorAll('.diff-btn'), allBtns: document.querySelectorAll('.btn, .diff-btn')
+        };
+
+        // ADVANCED AUDIO ENGINE
+        const audio = {
+            ctx: null,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); if(this.ctx.state === 'suspended') this.ctx.resume(); },
+            play(type) {
+                if(!this.ctx) return;
+                const osc = this.ctx.createOscillator(), gain = this.ctx.createGain(), now = this.ctx.currentTime;
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                
+                if(type === 'flap') { osc.type = 'square'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(350, now + 0.1); gain.gain.setValueAtTime(0.04, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+                else if(type === 'score') { osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.setValueAtTime(1200, now + 0.05); gain.gain.setValueAtTime(0.08, now); gain.gain.linearRampToValueAtTime(0, now + 0.1); osc.start(now); osc.stop(now + 0.1); }
+                else if(type === 'perfect') { osc.type = 'triangle'; osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(1200, now+0.1); osc.frequency.linearRampToValueAtTime(1800, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.2); osc.start(now); osc.stop(now+0.2); }
+                else if(type === 'powerup') { osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.3); osc.start(now); osc.stop(now+0.3); }
+                else if(type === 'warp') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(1500, now+0.5); gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now+0.5); osc.start(now); osc.stop(now+0.5); }
+                else if(type === 'crash') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(20, now+0.5); gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.5); osc.start(now); osc.stop(now+0.5); }
+                else if(type === 'alert') { osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(300, now+0.2); osc.frequency.setValueAtTime(400, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.6); osc.start(now); osc.stop(now+0.6); }
+                else if(type === 'hover') { osc.type = 'sine'; osc.frequency.setValueAtTime(1200, now); gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05); osc.start(now); osc.stop(now + 0.05); }
+                else if(type === 'start') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.4); gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.15, now + 0.1); gain.gain.linearRampToValueAtTime(0, now + 0.6); osc.start(now); osc.stop(now + 0.6); }
+                else if(type === 'focusOn') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.4); osc.start(now); osc.stop(now + 0.4); }
+                else if(type === 'focusOff') { osc.type = 'triangle'; osc.frequency.setValueAtTime(80, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.3); osc.start(now); osc.stop(now + 0.3); }
+                else if(type === 'warpEnd') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(1500, now); osc.frequency.exponentialRampToValueAtTime(200, now + 0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.4); osc.start(now); osc.stop(now + 0.4); }
+            }
+        };
+
+        // Attach hover sounds to all buttons
+        ui.allBtns.forEach(btn => btn.addEventListener('mouseenter', () => audio.play('hover')));
+
+        const COLOR_1 = '#00E5FF'; const COLOR_2 = '#FF007F'; 
+        
+        const difficulties = {
+            easy: { speed: 4, gap: 200, gravity: 0.4, spawnRate: 110, moveWalls: false, glitchChance: 0.0, darkSectorStart: 100 },
+            medium: { speed: 5.5, gap: 160, gravity: 0.45, spawnRate: 90, moveWalls: false, glitchChance: 0.1, darkSectorStart: 30 },
+            difficult: { speed: 7, gap: 135, gravity: 0.5, spawnRate: 75, moveWalls: false, glitchChance: 0.25, darkSectorStart: 15 },
+            hard: { speed: 8, gap: 125, gravity: 0.55, spawnRate: 65, moveWalls: true, glitchChance: 0.4, darkSectorStart: 10 }
+        };
+
+        let currentDiff = 'medium';
+        let config = { ...difficulties[currentDiff], baseSpeed: difficulties[currentDiff].speed };
+        let gameActive = false, score = 0, frames = 0, combo = 0;
+        
+        let focusMeter = 100, isFocusing = false;
+        let isDarkSector = false, darkSectorTimer = 0, lightRadius = 100;
+        let isWarp = false, warpTimer = 0;
+        let shieldActive = false, shieldTimer = 0;
+
+        let userProfile = { name: '', highScore: 0, gamesPlayed: 0 };
+        function loadProfile() { try { const saved = localStorage.getItem('falak_v6'); if(saved) userProfile = JSON.parse(saved); if(userProfile.name) ui.playerNameInput.value = userProfile.name; updateUI(); } catch(e){} }
+        function saveProfile() { try { userProfile.name = ui.playerNameInput.value.trim() || 'Guest'; localStorage.setItem('falak_v6', JSON.stringify(userProfile)); updateUI(); } catch(e){} }
+        function updateUI() { ui.dashHighScore.innerText = userProfile.highScore; ui.dashGames.innerText = userProfile.gamesPlayed; }
+
+        let floatingTexts = [];
+        function addText(x, y, text, color) { floatingTexts.push({x, y, text, color, life: 1.0}); }
+
+        const player = {
+            x: 150, y: 300, radius: 12, velocity: 0, color: COLOR_1, trail: [],
+            draw() {
+                if(!gameActive) return; 
+                this.trail.forEach((t, i) => { ctx.globalAlpha = (i/this.trail.length)*0.5; ctx.beginPath(); ctx.arc(t.x, t.y, this.radius*(i/this.trail.length), 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); });
+                ctx.globalAlpha = 1.0; ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2); ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = this.color; ctx.stroke();
+                
+                if(shieldActive || isWarp) {
+                    ctx.shadowBlur = 30; ctx.shadowColor = isWarp ? '#9D00FF' : '#fff'; 
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.radius + 6, 0, Math.PI*2); 
+                    ctx.strokeStyle = isWarp ? '#9D00FF' : 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke(); ctx.shadowBlur = 0;
+                } else {
+                    ctx.shadowBlur = isFocusing ? 30 : 20; ctx.shadowColor = isFocusing ? '#fff' : this.color; ctx.fill(); ctx.shadowBlur = 0;
+                }
+            },
+            update() {
+                let currentGravity = isFocusing ? config.gravity * 0.3 : config.gravity;
+                this.velocity += currentGravity; this.y += this.velocity;
+                this.trail.push({x: this.x, y: this.y}); if (this.trail.length > (isFocusing || isWarp ? 25 : 15)) this.trail.shift();
+                if (this.y + this.radius >= canvas.height || this.y - this.radius <= 0) triggerGameOver();
+
+                if(shieldActive) { shieldTimer--; if(shieldTimer <= 0) { shieldActive = false; if(!isWarp) ui.statusIndicator.style.display = 'none'; } }
+                if(isWarp) { 
+                    warpTimer--; 
+                    if(warpTimer === 1) audio.play('warpEnd'); // Audio cue for ending
+                    if(warpTimer <= 0) { isWarp = false; config.speed = config.baseSpeed; if(!shieldActive) ui.statusIndicator.style.display = 'none'; canvas.classList.remove('warp-glow'); } 
+                }
+            },
+            flap() { 
+                this.velocity = isFocusing ? -3.5 : -7.5; 
+                audio.play('flap'); 
+                if(isDarkSector && !isWarp) lightRadius = 600; 
+            },
+            switchColor() { this.color = (this.color === COLOR_1) ? COLOR_2 : COLOR_1; }
+        };
+
+        const objects = {
+            walls: [], powerups: [], width: 50,
+            draw() {
+                this.walls.forEach(wall => {
+                    ctx.fillStyle = wall.topColor; ctx.globalAlpha = isWarp ? 0.3 : 0.9; ctx.fillRect(wall.x, 0, this.width, wall.topHeight);
+                    ctx.fillStyle = wall.bottomColor; ctx.fillRect(wall.x, wall.bottomY, this.width, canvas.height - wall.bottomY);
+                    ctx.globalAlpha = 1.0; ctx.fillStyle = '#fff'; ctx.fillRect(wall.x, wall.topHeight - 3, this.width, 3); ctx.fillRect(wall.x, wall.bottomY, this.width, 3);
+                });
+                this.powerups.forEach(p => {
+                    if(p.collected) return;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, 10, 0, Math.PI*2);
+                    if(p.type === 'score') ctx.fillStyle = '#F6B93B';
+                    else if(p.type === 'shield') ctx.fillStyle = '#fff';
+                    else if(p.type === 'warp') ctx.fillStyle = '#9D00FF';
+                    ctx.shadowBlur = 20; ctx.shadowColor = ctx.fillStyle; ctx.fill(); ctx.shadowBlur = 0;
+                });
+            },
+            update() {
+                let currentSpeed = isFocusing ? config.speed * 0.3 : config.speed;
+                let currentSpawnRate = Math.floor(config.spawnRate / (isFocusing ? 0.3 : (isWarp ? 2 : 1)));
+
+                if (frames % Math.max(25, currentSpawnRate) === 0) {
+                    let gap = Math.max(100, config.gap - Math.floor(score/20)*5); 
+                    let gapPosition = Math.random() * (canvas.height - gap - 100) + 50;
+                    let isGlitch = Math.random() < config.glitchChance && score > 10;
+
+                    this.walls.push({ x: canvas.width, topHeight: gapPosition, bottomY: gapPosition + gap, topColor: Math.random() > 0.5 ? COLOR_1 : COLOR_2, bottomColor: Math.random() > 0.5 ? COLOR_1 : COLOR_2, passed: false, isGlitch: isGlitch, moveDir: Math.random() > 0.5 ? 1 : -1 });
+                    
+                    if(!isWarp && Math.random() < 0.20) {
+                        let pType = Math.random();
+                        let type = pType > 0.6 ? 'score' : (pType > 0.2 ? 'shield' : 'warp');
+                        this.powerups.push({ x: canvas.width + this.width/2, y: gapPosition + gap/2, type: type, collected: false });
+                    }
+                }
+
+                this.walls.forEach((wall, index) => {
+                    wall.x -= currentSpeed;
+                    
+                    if(config.moveWalls) { wall.topHeight += 2 * wall.moveDir; wall.bottomY += 2 * wall.moveDir; if(wall.topHeight < 20 || wall.bottomY > canvas.height - 20) wall.moveDir *= -1; }
+                    if(wall.isGlitch && frames % 15 === 0) { wall.topColor = wall.topColor === COLOR_1 ? COLOR_2 : COLOR_1; wall.bottomColor = wall.bottomColor === COLOR_1 ? COLOR_2 : COLOR_1; }
+
+                    let gapCenter = wall.topHeight + (wall.bottomY - wall.topHeight)/2;
+
+                    if (player.x + player.radius > wall.x && player.x - player.radius < wall.x + this.width) {
+                        if (!shieldActive && !isWarp) {
+                            if (player.y - player.radius < wall.topHeight && player.color !== wall.topColor) triggerGameOver();
+                            if (player.y + player.radius > wall.bottomY && player.color !== wall.bottomColor) triggerGameOver();
+                        }
+                    }
+
+                    if (wall.x + this.width < player.x && !wall.passed) {
+                        wall.passed = true;
+                        if(!isWarp && Math.abs(player.y - gapCenter) < 25) { 
+                            combo++; score += 2; focusMeter = Math.min(100, focusMeter + 20); audio.play('perfect');
+                            addText(player.x, player.y - 20, "PERFECT!", "#F6B93B"); ui.comboText.innerText = combo > 1 ? `${combo}x COMBO` : '';
+                        } else {
+                            combo = 0; score++; audio.play('score'); addText(player.x, player.y - 20, "+1", "#fff"); ui.comboText.innerText = '';
+                        }
+                        ui.inGameScore.innerText = score;
+                        
+                        if (score > 0 && score % config.darkSectorStart === 0 && !isDarkSector) {
+                            isDarkSector = true; darkSectorTimer = 800; audio.play('alert');
+                            ui.alertText.style.opacity = 1; setTimeout(() => ui.alertText.style.opacity = 0, 2000);
+                        }
+                        if (score % 10 === 0 && !isWarp) { config.baseSpeed += 0.3; config.speed = config.baseSpeed; } 
+                    }
+                    if (wall.x + this.width < 0) this.walls.splice(index, 1);
+                });
+
+                this.powerups.forEach((p, index) => {
+                    p.x -= currentSpeed;
+                    if(!p.collected && Math.hypot(player.x - p.x, player.y - p.y) < player.radius + 15) {
+                        p.collected = true; 
+                        if(p.type === 'score') { score += 5; ui.inGameScore.innerText = score; addText(player.x, player.y-20, "+5 BONUS!", "#F6B93B"); audio.play('powerup'); }
+                        else if(p.type === 'shield') { shieldActive = true; shieldTimer = 300; ui.statusIndicator.innerText = "SHIELD ACTIVE"; ui.statusIndicator.style.color = "#fff"; ui.statusIndicator.style.display = 'block'; audio.play('powerup'); }
+                        else if(p.type === 'warp') { 
+                            isWarp = true; if(isFocusing) { isFocusing = false; audio.play('focusOff'); }
+                            warpTimer = 250; config.baseSpeed = config.speed; config.speed *= 3; 
+                            ui.statusIndicator.innerText = "WARP SPEED!"; ui.statusIndicator.style.color = "#9D00FF"; ui.statusIndicator.style.display = 'block';
+                            canvas.classList.add('warp-glow'); audio.play('warp');
+                        }
+                    }
+                    if (p.x < -20) this.powerups.splice(index, 1);
+                });
+            }
+        };
+
+        const stars = Array.from({length: 80}, () => ({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, size: Math.random() * 2, speed: Math.random() * 1 + 0.1 }));
+        
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            let bgLight = Math.min(0.15, score / 500); ctx.fillStyle = `rgba(0, 229, 255, ${bgLight})`; ctx.fillRect(0,0,canvas.width,canvas.height);
+            
+            ctx.fillStyle = '#fff';
+            stars.forEach(star => {
+                ctx.globalAlpha = star.size / 2; 
+                if(isWarp) { ctx.beginPath(); ctx.moveTo(star.x, star.y); ctx.lineTo(star.x + 50, star.y); ctx.strokeStyle = '#fff'; ctx.lineWidth = star.size; ctx.stroke(); }
+                else { ctx.beginPath(); ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2); ctx.fill(); }
+                if(gameActive) star.x -= star.speed * ((isFocusing ? config.speed*0.3 : config.speed) / 3); 
+                if (star.x < 0) star.x = canvas.width;
+            });
+            ctx.globalAlpha = 1.0;
+
+            if (isDarkSector && !isWarp) {
+                if (lightRadius > 80) lightRadius -= 12;
+                let gradient = ctx.createRadialGradient(player.x, player.y, 20, player.x, player.y, lightRadius);
+                gradient.addColorStop(0, 'rgba(0,0,0,0)'); gradient.addColorStop(0.8, 'rgba(2,2,3,0.98)'); gradient.addColorStop(1, 'rgba(0,0,0,1)');
+                ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        let particles = [];
+        function triggerGameOver() {
+            gameActive = false; audio.play('crash');
+            canvas.classList.add('shake'); setTimeout(() => canvas.classList.remove('shake'), 300);
+            for(let i=0; i<50; i++) particles.push({ x: player.x, y: player.y, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, life: 1.0, color: player.color });
+            
+            userProfile.gamesPlayed++; if(score > userProfile.highScore) userProfile.highScore = score; saveProfile();
+            setTimeout(() => { ui.hud.classList.add('hidden'); ui.gameOver.classList.remove('hidden'); ui.goScore.innerText = score; ui.goHighScore.innerText = userProfile.highScore; }, 1000);
+        }
+
+        function loop() {
+            if(gameActive) {
+                if(isFocusing && !isWarp) { 
+                    focusMeter -= 0.5; 
+                    if(focusMeter <= 0) { isFocusing = false; focusMeter = 0; audio.play('focusOff'); } 
+                }
+                ui.focusBar.style.width = focusMeter + "%"; ui.focusBar.style.background = isFocusing ? "#fff" : "#00E5FF"; ui.focusBar.style.boxShadow = isFocusing ? "0 0 15px #fff" : "0 0 10px #00E5FF";
+                if(isDarkSector) { darkSectorTimer--; if(darkSectorTimer <= 0) isDarkSector = false; }
+                objects.update(); player.update(); frames++;
+            }
+            
+            if(!isDarkSector || isWarp) { drawBackground(); objects.draw(); }
+            else { objects.draw(); drawBackground(); }
+
+            for(let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+                if(p.life <= 0) { particles.splice(i, 1); continue; }
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
+            }
+            ctx.globalAlpha = 1.0;
+
+            for(let i = floatingTexts.length - 1; i >= 0; i--) {
+                let ft = floatingTexts[i]; ft.y -= 1.5; ft.life -= 0.02;
+                if(ft.life <= 0) { floatingTexts.splice(i, 1); continue; }
+                ctx.globalAlpha = ft.life; ctx.fillStyle = ft.color; ctx.font = "bold 20px Orbitron"; ctx.fillText(ft.text, ft.x - 10, ft.y); ctx.globalAlpha = 1.0;
+            }
+
+            if(gameActive) player.draw();
+            requestAnimationFrame(loop);
+        }
+
+        function startGame() {
+            audio.init(); audio.play('start'); saveProfile();
+            config = { ...difficulties[currentDiff], baseSpeed: difficulties[currentDiff].speed };
+            gameActive = true; isDarkSector = false; isFocusing = false; focusMeter = 100; isWarp = false; shieldActive = false;
+            player.y = canvas.height / 2; player.velocity = 0; player.trail = []; player.color = COLOR_1; canvas.classList.remove('warp-glow');
+            particles = []; floatingTexts = []; objects.walls = []; objects.powerups = []; score = 0; frames = 0; combo = 0;
+            ui.inGameScore.innerText = score; ui.comboText.innerText = ""; ui.alertText.style.opacity = 0; ui.statusIndicator.style.display = 'none';
+            ui.mainMenu.classList.add('hidden'); ui.gameOver.classList.add('hidden'); ui.hud.classList.remove('hidden');
+        }
+
+        ui.diffBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                ui.diffBtns.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active'); currentDiff = e.target.dataset.diff;
+            });
+        });
+
+        let keys = {};
+        window.addEventListener('keydown', (e) => {
+            if(!ui.mainMenu.classList.contains('hidden')) return;
+            if (e.code === 'Space') { e.preventDefault(); if(gameActive) player.flap(); else if(!ui.gameOver.classList.contains('hidden')) startGame(); }
+            if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && gameActive) player.switchColor();
+            if (e.code === 'KeyF' && gameActive && focusMeter > 0 && !keys['KeyF'] && !isWarp) { 
+                isFocusing = true; keys['KeyF'] = true; audio.play('focusOn'); 
+            }
+        });
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'KeyF') { 
+                if(isFocusing) audio.play('focusOff');
+                isFocusing = false; keys['KeyF'] = false; 
+            }
+        });
+
+        ui.startBtn.addEventListener('click', startGame); ui.retryBtn.addEventListener('click', startGame);
+        ui.menuBtn.addEventListener('click', () => { ui.gameOver.classList.add('hidden'); ui.mainMenu.classList.remove('hidden'); updateUI(); });
+
+        loadProfile(); loop();
+    </script>
+</body>
+</html>
