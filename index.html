@@ -6,21 +6,12 @@
     <title>FalaK - Mobile Masterpiece</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS SCREEN FIX APPLIED HERE */
         * { margin: 0; padding: 0; box-sizing: border-box; touch-action: none; }
         
         html, body { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            margin: 0; 
-            padding: 0; 
-            overflow: hidden; 
-            background-color: #020203; 
-            color: #fff; 
-            font-family: 'Segoe UI', sans-serif; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            margin: 0; padding: 0; overflow: hidden; 
+            background-color: #020203; color: #fff; font-family: 'Segoe UI', sans-serif; 
         }
         
         #gameWrapper { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
@@ -58,8 +49,6 @@
         #focusBar { width: 100%; height: 100%; background: #00E5FF; box-shadow: 0 0 10px #00E5FF; transition: width 0.1s; }
         #statusIndicator { font-family: 'Orbitron'; font-size: 0.9rem; margin-bottom: 5px; display: none; font-weight: bold; text-align: right; }
         
-        #alertText { font-family: 'Orbitron'; font-size: 1.5rem; color: #ff3366; font-weight: bold; text-shadow: 0 0 20px #ff3366; position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.3s; z-index: 15; pointer-events: none; text-align: center; width: 100%;}
-        
         /* TOUCH ZONES */
         #touchLeft { position: absolute; top: 0; left: 0; width: 50%; height: 100%; z-index: 5; }
         #touchRight { position: absolute; top: 0; right: 0; width: 50%; height: 100%; z-index: 5; }
@@ -75,8 +64,6 @@
 <body>
     <div id="gameWrapper">
         <canvas id="gameCanvas"></canvas>
-
-        <div id="alertText">DARK SECTOR</div>
         
         <div id="touchLeft"></div>
         <div id="touchRight"></div>
@@ -115,7 +102,7 @@
             <button class="btn" id="startBtn">INITIALIZE</button>
             
             <div class="instructions">
-                <span class="highlight">TAP RIGHT HALF:</span> Fly / Pulse<br>
+                <span class="highlight">TAP RIGHT HALF:</span> Fly<br>
                 <span class="highlight">TAP LEFT HALF:</span> Switch Color<br>
                 <span style="color:#F6B93B;">🟡 +5</span> | ⚪ Invincible | <span style="color:#9D00FF;">🟣 Warp</span>
             </div>
@@ -137,9 +124,7 @@
         const ctx = canvas.getContext('2d');
         const gameWrapper = document.getElementById('gameWrapper');
         
-        // JAVASCRIPT SCREEN FIX APPLIED HERE
         function resize() {
-            // Force the wrapper and canvas to match the exact visible inner height of the mobile browser
             gameWrapper.style.width = window.innerWidth + 'px';
             gameWrapper.style.height = window.innerHeight + 'px';
             canvas.width = window.innerWidth;
@@ -147,13 +132,13 @@
             if(player) player.x = canvas.width * 0.25; 
         }
         window.addEventListener('resize', resize);
-        window.addEventListener('orientationchange', () => setTimeout(resize, 100)); // Fix for rotation
+        window.addEventListener('orientationchange', () => setTimeout(resize, 100));
 
         const ui = {
             mainMenu: document.getElementById('mainMenu'), gameOver: document.getElementById('gameOverScreen'),
             hud: document.getElementById('hud'), inGameScore: document.getElementById('inGameScore'),
             comboText: document.getElementById('comboText'), focusBar: document.getElementById('focusBar'), 
-            alertText: document.getElementById('alertText'), statusIndicator: document.getElementById('statusIndicator'),
+            statusIndicator: document.getElementById('statusIndicator'),
             playerNameInput: document.getElementById('playerName'), dashHighScore: document.getElementById('dashHighScore'),
             dashGames: document.getElementById('dashGames'), startBtn: document.getElementById('startBtn'),
             retryBtn: document.getElementById('retryBtn'), menuBtn: document.getElementById('menuBtn'),
@@ -176,7 +161,6 @@
                 else if(type === 'powerup') { osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.linearRampToValueAtTime(800, now+0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.3); osc.start(now); osc.stop(now+0.3); }
                 else if(type === 'warp') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(1500, now+0.5); gain.gain.setValueAtTime(0.15, now); gain.gain.linearRampToValueAtTime(0, now+0.5); osc.start(now); osc.stop(now+0.5); }
                 else if(type === 'crash') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now); osc.frequency.exponentialRampToValueAtTime(20, now+0.5); gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now+0.5); osc.start(now); osc.stop(now+0.5); }
-                else if(type === 'alert') { osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(300, now+0.2); osc.frequency.setValueAtTime(400, now+0.4); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now+0.6); osc.start(now); osc.stop(now+0.6); }
                 else if(type === 'start') { osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.4); gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(0.15, now + 0.1); gain.gain.linearRampToValueAtTime(0, now + 0.6); osc.start(now); osc.stop(now + 0.6); }
                 else if(type === 'focusOn') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.3); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.4); osc.start(now); osc.stop(now + 0.4); }
                 else if(type === 'focusOff') { osc.type = 'triangle'; osc.frequency.setValueAtTime(80, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.2); gain.gain.setValueAtTime(0.1, now); gain.gain.linearRampToValueAtTime(0, now + 0.3); osc.start(now); osc.stop(now + 0.3); }
@@ -186,10 +170,10 @@
         const COLOR_1 = '#00E5FF'; const COLOR_2 = '#FF007F'; 
         
         const difficulties = {
-            easy: { speed: 3.5, gap: 200, gravity: 0.35, spawnRate: 110, moveWalls: false, glitchChance: 0.0, darkSectorStart: 100 },
-            medium: { speed: 4.5, gap: 170, gravity: 0.4, spawnRate: 90, moveWalls: false, glitchChance: 0.1, darkSectorStart: 30 },
-            difficult: { speed: 5.5, gap: 150, gravity: 0.45, spawnRate: 80, moveWalls: false, glitchChance: 0.25, darkSectorStart: 15 },
-            hard: { speed: 6.5, gap: 130, gravity: 0.5, spawnRate: 70, moveWalls: true, glitchChance: 0.4, darkSectorStart: 10 }
+            easy: { speed: 3.5, gap: 200, gravity: 0.35, spawnRate: 110, moveWalls: false, glitchChance: 0.0 },
+            medium: { speed: 4.5, gap: 170, gravity: 0.4, spawnRate: 90, moveWalls: false, glitchChance: 0.1 },
+            difficult: { speed: 5.5, gap: 150, gravity: 0.45, spawnRate: 80, moveWalls: false, glitchChance: 0.25 },
+            hard: { speed: 6.5, gap: 130, gravity: 0.5, spawnRate: 70, moveWalls: true, glitchChance: 0.4 }
         };
 
         let currentDiff = 'medium';
@@ -197,7 +181,6 @@
         let gameActive = false, score = 0, frames = 0, combo = 0;
         
         let focusMeter = 100, isFocusing = false;
-        let isDarkSector = false, darkSectorTimer = 0, lightRadius = 100;
         let isWarp = false, warpTimer = 0;
         let shieldActive = false, shieldTimer = 0;
 
@@ -231,9 +214,12 @@
                 if (this.y + this.radius >= canvas.height || this.y - this.radius <= 0) triggerGameOver();
 
                 if(shieldActive) { shieldTimer--; if(shieldTimer <= 0) { shieldActive = false; if(!isWarp) ui.statusIndicator.style.display = 'none'; } }
-                if(isWarp) { warpTimer--; if(warpTimer <= 0) { isWarp = false; config.speed = config.baseSpeed; if(!shieldActive) ui.statusIndicator.style.display = 'none'; canvas.classList.remove('warp-glow'); } }
+                if(isWarp) { 
+                    warpTimer--; 
+                    if(warpTimer <= 0) { isWarp = false; config.speed = config.baseSpeed; if(!shieldActive) ui.statusIndicator.style.display = 'none'; canvas.classList.remove('warp-glow'); } 
+                }
             },
-            flap() { this.velocity = isFocusing ? -3.5 : -7.5; audio.play('flap'); if(isDarkSector && !isWarp) lightRadius = canvas.width; },
+            flap() { this.velocity = isFocusing ? -3.5 : -7.5; audio.play('flap'); },
             switchColor() { this.color = (this.color === COLOR_1) ? COLOR_2 : COLOR_1; }
         };
 
@@ -248,7 +234,9 @@
                 this.powerups.forEach(p => {
                     if(p.collected) return;
                     ctx.beginPath(); ctx.arc(p.x, p.y, 8, 0, Math.PI*2);
-                    if(p.type === 'score') ctx.fillStyle = '#F6B93B'; else if(p.type === 'shield') ctx.fillStyle = '#fff'; else if(p.type === 'warp') ctx.fillStyle = '#9D00FF';
+                    if(p.type === 'score') ctx.fillStyle = '#F6B93B';
+                    else if(p.type === 'shield') ctx.fillStyle = '#fff';
+                    else if(p.type === 'warp') ctx.fillStyle = '#9D00FF';
                     ctx.shadowBlur = 15; ctx.shadowColor = ctx.fillStyle; ctx.fill(); ctx.shadowBlur = 0;
                 });
             },
@@ -260,6 +248,7 @@
                     let gap = Math.max(100, config.gap - Math.floor(score/20)*5); 
                     let gapPosition = Math.random() * (canvas.height - gap - 150) + 75;
                     let isGlitch = Math.random() < config.glitchChance && score > 10;
+
                     this.walls.push({ x: canvas.width, topHeight: gapPosition, bottomY: gapPosition + gap, topColor: Math.random() > 0.5 ? COLOR_1 : COLOR_2, bottomColor: Math.random() > 0.5 ? COLOR_1 : COLOR_2, passed: false, isGlitch: isGlitch, moveDir: Math.random() > 0.5 ? 1 : -1 });
                     
                     if(!isWarp && Math.random() < 0.20) {
@@ -293,10 +282,6 @@
                         }
                         ui.inGameScore.innerText = score;
                         
-                        if (score > 0 && score % config.darkSectorStart === 0 && !isDarkSector) {
-                            isDarkSector = true; darkSectorTimer = 800; audio.play('alert');
-                            ui.alertText.style.opacity = 1; setTimeout(() => ui.alertText.style.opacity = 0, 2000);
-                        }
                         if (score % 10 === 0 && !isWarp) { config.baseSpeed += 0.2; config.speed = config.baseSpeed; } 
                     }
                     if (wall.x + this.width < 0) this.walls.splice(index, 1);
@@ -335,13 +320,6 @@
                 if (star.x < 0) star.x = canvas.width;
             });
             ctx.globalAlpha = 1.0;
-
-            if (isDarkSector && !isWarp) {
-                if (lightRadius > 60) lightRadius -= 10;
-                let gradient = ctx.createRadialGradient(player.x, player.y, 10, player.x, player.y, lightRadius);
-                gradient.addColorStop(0, 'rgba(0,0,0,0)'); gradient.addColorStop(0.8, 'rgba(2,2,3,0.95)'); gradient.addColorStop(1, 'rgba(0,0,0,1)');
-                ctx.fillStyle = gradient; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
         }
 
         let particles = [];
@@ -358,11 +336,11 @@
             if(gameActive) {
                 if(isFocusing && !isWarp) { focusMeter -= 0.5; if(focusMeter <= 0) { isFocusing = false; focusMeter = 0; audio.play('focusOff'); } }
                 ui.focusBar.style.width = focusMeter + "%"; ui.focusBar.style.background = isFocusing ? "#fff" : "#00E5FF"; ui.focusBar.style.boxShadow = isFocusing ? "0 0 10px #fff" : "0 0 5px #00E5FF";
-                if(isDarkSector) { darkSectorTimer--; if(darkSectorTimer <= 0) isDarkSector = false; }
                 objects.update(); player.update(); frames++;
             }
             
-            if(!isDarkSector || isWarp) { drawBackground(); objects.draw(); } else { objects.draw(); drawBackground(); }
+            drawBackground(); 
+            objects.draw();
 
             for(let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.04;
@@ -384,10 +362,10 @@
         function startGame() {
             audio.init(); audio.play('start'); saveProfile(); resize();
             config = { ...difficulties[currentDiff], baseSpeed: difficulties[currentDiff].speed };
-            gameActive = true; isDarkSector = false; isFocusing = false; focusMeter = 100; isWarp = false; shieldActive = false;
+            gameActive = true; isFocusing = false; focusMeter = 100; isWarp = false; shieldActive = false;
             player.y = canvas.height / 2; player.velocity = 0; player.trail = []; player.color = COLOR_1; canvas.classList.remove('warp-glow');
             particles = []; floatingTexts = []; objects.walls = []; objects.powerups = []; score = 0; frames = 0; combo = 0;
-            ui.inGameScore.innerText = score; ui.comboText.innerText = ""; ui.alertText.style.opacity = 0; ui.statusIndicator.style.display = 'none';
+            ui.inGameScore.innerText = score; ui.comboText.innerText = ""; ui.statusIndicator.style.display = 'none';
             ui.mainMenu.classList.add('hidden'); ui.gameOver.classList.add('hidden'); ui.hud.classList.remove('hidden'); ui.focusBtn.classList.remove('hidden');
         }
 
